@@ -31,6 +31,10 @@ $ python3 basic_streaming.py
 > start port5000_csi.bat
 > start port5001_rs.bat
 ```
+Alternatively, if you have built OpenCV with GStreamer, you can simply run the following command.
+```
+> python basic_receiver.py
+```
 Then, you should see two video streaming from the front RealSense camera and the rear CSI camera.
 
 # Streaming between Windows
