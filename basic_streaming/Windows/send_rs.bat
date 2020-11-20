@@ -1,0 +1,2 @@
+@ECHO OFF
+gst-launch-1.0 -v ksvideosrc device-index=0  ! queue  ! videoconvert !  video/x-raw,format=I420,width=1920,height=1080,framerate=30/1 ! jpegenc ! rtpjpegpay ! queue ! udpsink host=127.0.0.1 port=5000
