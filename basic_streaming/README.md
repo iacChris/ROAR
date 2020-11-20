@@ -1,4 +1,4 @@
-# Basic Streaming
+# Streaming between Jetson and Windows
 
 **On the Jetson Nano**, make sure both your RealSense camera and CSI camera are working properly. You can try to run the following testing scripts.
 ```
@@ -32,3 +32,10 @@ $ python3 basic_streaming.py
 > start port5001_rs.bat
 ```
 Then, you should see two video streaming from the front RealSense camera and the rear CSI camera.
+
+# Streaming between Windows
+**On the Windows**, make sure the RealSense Camera is connected, and run the following scripts to send and receive on the same Windows.
+```
+> start send_rs.bat
+> start receive_rs.bat
+```
