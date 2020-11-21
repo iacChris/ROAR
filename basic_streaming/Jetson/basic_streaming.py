@@ -110,50 +110,53 @@ def send_rs():
                     apiPreference=cv2.CAP_GSTREAMER,
                     fourcc=0,
                     fps=30,
-                    frameSize=(1280,480), 
+                    frameSize=(640*2,480), 
                     isColor=True
                 )
-    # initialize GStreamer Sender pipeline for RealSense color, using port 5002
-    out_send_color = cv2.VideoWriter(
-                    "appsrc ! "
-                    "videoconvert ! "
-                    "video/x-raw, format=(string)BGRx, width=(int)1280, height=(int)720, framerate=(fraction)30/1 ! "
-                    "videoconvert ! "
-                    "video/x-raw, format=(string)I420 ! "
-                    "omxh264enc control-rate=2 bitrate=4000000 ! "
-                    "video/x-h264, stream-format=byte-stream ! "
-                    "rtph264pay mtu=1400 ! "
-                    "udpsink host=%s port=5002 sync=false async=false"
-                    % (
-                        CLIENT_IP
-                    ),
-                    apiPreference=cv2.CAP_GSTREAMER,
-                    fourcc=0,
-                    fps=30,
-                    frameSize=(1280,720), 
-                    isColor=True
-                )
-    # initialize GStreamer Sender pipeline for RealSense depth, using port 5003
-    out_send_depth = cv2.VideoWriter(
-                    "appsrc ! "
-                    "videoconvert ! "
-                    "video/x-raw, format=(string)BGRx, width=(int)1280, height=(int)720, framerate=(fraction)30/1 ! "
-                    "videoconvert ! "
-                    "video/x-raw, format=(string)I420 ! "
-                    "omxh264enc control-rate=2 bitrate=4000000 ! "
-                    "video/x-h264, stream-format=byte-stream ! "
-                    "rtph264pay mtu=1400 ! "
-                    "udpsink host=%s port=5003 sync=false async=false"
-                    % (
-                        CLIENT_IP
-                    ),
-                    apiPreference=cv2.CAP_GSTREAMER,
-                    fourcc=0,
-                    fps=30,
-                    frameSize=(1280,720), 
-                    isColor=True
-                )
-    # colorizer
+    # Start of Legacy Code Section, you are free to comment out lines below to stream color/depth individually
+    # # initialize GStreamer Sender pipeline for RealSense color, using port 5002
+    # out_send_color = cv2.VideoWriter(
+    #                 "appsrc ! "
+    #                 "videoconvert ! "
+    #                 "video/x-raw, format=(string)BGRx, width=(int)640, height=(int)480, framerate=(fraction)30/1 ! "
+    #                 "videoconvert ! "
+    #                 "video/x-raw, format=(string)I420 ! "
+    #                 "omxh264enc control-rate=2 bitrate=4000000 ! "
+    #                 "video/x-h264, stream-format=byte-stream ! "
+    #                 "rtph264pay mtu=1400 ! "
+    #                 "udpsink host=%s port=5002 sync=false async=false"
+    #                 % (
+    #                     CLIENT_IP
+    #                 ),
+    #                 apiPreference=cv2.CAP_GSTREAMER,
+    #                 fourcc=0,
+    #                 fps=30,
+    #                 frameSize=(640,480), 
+    #                 isColor=True
+    #             )
+    # # initialize GStreamer Sender pipeline for RealSense depth, using port 5003
+    # out_send_depth = cv2.VideoWriter(
+    #                 "appsrc ! "
+    #                 "videoconvert ! "
+    #                 "video/x-raw, format=(string)BGRx, width=(int)640, height=(int)480, framerate=(fraction)30/1 ! "
+    #                 "videoconvert ! "
+    #                 "video/x-raw, format=(string)I420 ! "
+    #                 "omxh264enc control-rate=2 bitrate=4000000 ! "
+    #                 "video/x-h264, stream-format=byte-stream ! "
+    #                 "rtph264pay mtu=1400 ! "
+    #                 "udpsink host=%s port=5003 sync=false async=false"
+    #                 % (
+    #                     CLIENT_IP
+    #                 ),
+    #                 apiPreference=cv2.CAP_GSTREAMER,
+    #                 fourcc=0,
+    #                 fps=30,
+    #                 frameSize=(640,480), 
+    #                 isColor=True
+    #             )
+    # End of Legacy Code Section
+
+    # colorizer to color depth image
     colorizer = rs.colorizer()
     colorizer.set_option(rs.option.color_scheme, 2);  # white to black
     # actual streaming data
