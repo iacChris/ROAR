@@ -89,11 +89,11 @@ def send_csi():
 
 def send_rs():
     # initialize RealSense camera
-    pipe = rs.pipeline()
+    pipeline = rs.pipeline()
     cfg = rs.config()
     cfg.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)  # color camera
     cfg.enable_stream(rs.stream.depth, 640, 480, rs.format.z16,  30)  # depth camera
-    pipe.start(cfg)
+    pipeline.start(cfg)
     # initialize GStreamer Sender pipeline for RealSense color and depth, using port 5001
     out_send_both = cv2.VideoWriter(
                     "appsrc ! "
@@ -138,7 +138,7 @@ def send_rs():
         # send using GStreamer
         out_send_both.write(images)
 
-        # print(f'\rcolor shape: {color_image.shape}, colorized_depth shape: {colorized_depth.shape}, images shape: {images.shape}', end='')
+        print(f'\rcolor shape: {color_image.shape}, colorized_depth shape: {colorized_depth.shape}, images shape: {images.shape}', end='')
 
         ##### Optional: displaying what is beint sent
         ##### Note: it will cause the streaming to be laggy!
