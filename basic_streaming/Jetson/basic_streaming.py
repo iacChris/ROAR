@@ -3,7 +3,8 @@ import cv2
 import pyrealsense2 as rs
 from multiprocessing import Process
 
-CLIENT_IP='192.168.1.74' # you need to modify this line match the ip addr. of your client
+# CLIENT_IP='192.168.1.74' # you need to modify this line match the ip addr. of your client
+CLIENT_IP='192.168.1.116'
 
 def gstreamer_pipeline(
     capture_width=3280, 
