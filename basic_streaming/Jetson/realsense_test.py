@@ -11,6 +11,9 @@ CONFIG.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
 def RealSense_test():
     pipeline = rs.pipeline()
     pipeline.start(CONFIG)
+    # colorizer
+    colorizer = rs.colorizer()
+    colorizer.set_option(rs.option.color_scheme, 2);  # white to black
     try:
         while True:
 
@@ -27,9 +30,13 @@ def RealSense_test():
 
             # Apply colormap on depth image (image must be converted to 8-bit per pixel first)
             depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.03), cv2.COLORMAP_JET)
+            # pyrealsense colorzier
+            colorized_depth = np.asanyarray(colorizer.colorize(depth_frame).get_data())
+
 
             # Stack both images horizontally
-            images = np.hstack((color_image, depth_colormap))
+            # images = np.hstack((color_image, depth_colormap))
+            images = np.hstack((color_image, colorized_depth))
 
             # Show images
             cv2.namedWindow('RealSense Camera Test', cv2.WINDOW_AUTOSIZE)
