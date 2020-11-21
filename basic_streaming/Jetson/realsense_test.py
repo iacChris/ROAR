@@ -38,6 +38,8 @@ def RealSense_test():
             # images = np.hstack((color_image, depth_colormap))
             images = np.hstack((color_image, colorized_depth))
 
+            print(f'\rcolor shape: {color_image.shape}, colorized_depth shape: {colorized_depth.shape}, images shape: {images.shape}', end='')
+
             # Show images
             cv2.namedWindow('RealSense Camera Test', cv2.WINDOW_AUTOSIZE)
             cv2.imshow('RealSense', images)

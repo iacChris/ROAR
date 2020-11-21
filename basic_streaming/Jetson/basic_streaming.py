@@ -90,13 +90,14 @@ def send_rs():
     # initialize RealSense camera
     pipe = rs.pipeline()
     cfg = rs.config()
-    cfg.enable_stream(rs.stream.color, 1280, 720, rs.format.bgr8, 30) # color camera
+    cfg.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)  # color camera
+    cfg.enable_stream(rs.stream.depth, 640, 480, rs.format.z16,  30)  # depth camera
     pipe.start(cfg)
-    # initialize GStreamer Sender pipeline for RealSense, using port 5001
-    out_send = cv2.VideoWriter(
+    # initialize GStreamer Sender pipeline for RealSense color and depth, using port 5001
+    out_send_both = cv2.VideoWriter(
                     "appsrc ! "
                     "videoconvert ! "
-                    "video/x-raw, format=(string)BGRx, width=(int)1280, height=(int)720, framerate=(fraction)30/1 ! "
+                    "video/x-raw, format=(string)BGRx, width=(int)1280, height=(int)480, framerate=(fraction)30/1 ! "
                     "videoconvert ! "
                     "video/x-raw, format=(string)I420 ! "
                     "omxh264enc control-rate=2 bitrate=4000000 ! "
@@ -109,19 +110,72 @@ def send_rs():
                     apiPreference=cv2.CAP_GSTREAMER,
                     fourcc=0,
                     fps=30,
+                    frameSize=(1280,480), 
+                    isColor=True
+                )
+    # initialize GStreamer Sender pipeline for RealSense color, using port 5002
+    out_send_color = cv2.VideoWriter(
+                    "appsrc ! "
+                    "videoconvert ! "
+                    "video/x-raw, format=(string)BGRx, width=(int)1280, height=(int)720, framerate=(fraction)30/1 ! "
+                    "videoconvert ! "
+                    "video/x-raw, format=(string)I420 ! "
+                    "omxh264enc control-rate=2 bitrate=4000000 ! "
+                    "video/x-h264, stream-format=byte-stream ! "
+                    "rtph264pay mtu=1400 ! "
+                    "udpsink host=%s port=5002 sync=false async=false"
+                    % (
+                        CLIENT_IP
+                    ),
+                    apiPreference=cv2.CAP_GSTREAMER,
+                    fourcc=0,
+                    fps=30,
                     frameSize=(1280,720), 
                     isColor=True
                 )
+    # initialize GStreamer Sender pipeline for RealSense depth, using port 5003
+    out_send_depth = cv2.VideoWriter(
+                    "appsrc ! "
+                    "videoconvert ! "
+                    "video/x-raw, format=(string)BGRx, width=(int)1280, height=(int)720, framerate=(fraction)30/1 ! "
+                    "videoconvert ! "
+                    "video/x-raw, format=(string)I420 ! "
+                    "omxh264enc control-rate=2 bitrate=4000000 ! "
+                    "video/x-h264, stream-format=byte-stream ! "
+                    "rtph264pay mtu=1400 ! "
+                    "udpsink host=%s port=5003 sync=false async=false"
+                    % (
+                        CLIENT_IP
+                    ),
+                    apiPreference=cv2.CAP_GSTREAMER,
+                    fourcc=0,
+                    fps=30,
+                    frameSize=(1280,720), 
+                    isColor=True
+                )
+    # colorizer
+    colorizer = rs.colorizer()
+    colorizer.set_option(rs.option.color_scheme, 2);  # white to black
     # actual streaming data
     while True:
         frames = pipe.wait_for_frames()
+        # color frame
         color_frame = frames.get_color_frame()
-        img = np.asanyarray(color_frame.get_data())
-        out_send.write(img)
+        color_image = np.asanyarray(color_frame.get_data())
+        # out_send_color.write(color_image)
+
+        # depth frame
+        depth_frame = frames.get_depth_frame()
+        colorized_depth = np.asanyarray(colorizer.colorize(depth_frame).get_data())
+        # out_send_depth.write(colorized_depth)
+
+        images = np.hstack((color_image, colorized_depth))
+        out_send_both.write(images)
+        # print(f'\rcolor shape: {color_image.shape}, colorized_depth shape: {colorized_depth.shape}, images shape: {images.shape}', end='')
 
         ##### Optional: displaying what is beint sent
         ##### Note: it will cause the streaming to be laggy!
-        # cv2.imshow("RealSense Camera Streaming", img)
+        # cv2.imshow("RealSense Camera Streaming", images)
         # keyCode = cv2.waitKey(30) & 0xFF
         # # Stop the program on the ESC key
         # if keyCode == 27:
