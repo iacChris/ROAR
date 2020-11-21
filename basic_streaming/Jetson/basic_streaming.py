@@ -114,67 +114,30 @@ def send_rs():
                     frameSize=(640*2,480), 
                     isColor=True
                 )
-    # Start of Legacy Code Section, you are free to comment out lines below to stream color/depth individually
-    # # initialize GStreamer Sender pipeline for RealSense color, using port 5002
-    # out_send_color = cv2.VideoWriter(
-    #                 "appsrc ! "
-    #                 "videoconvert ! "
-    #                 "video/x-raw, format=(string)BGRx, width=(int)640, height=(int)480, framerate=(fraction)30/1 ! "
-    #                 "videoconvert ! "
-    #                 "video/x-raw, format=(string)I420 ! "
-    #                 "omxh264enc control-rate=2 bitrate=4000000 ! "
-    #                 "video/x-h264, stream-format=byte-stream ! "
-    #                 "rtph264pay mtu=1400 ! "
-    #                 "udpsink host=%s port=5002 sync=false async=false"
-    #                 % (
-    #                     CLIENT_IP
-    #                 ),
-    #                 apiPreference=cv2.CAP_GSTREAMER,
-    #                 fourcc=0,
-    #                 fps=30,
-    #                 frameSize=(640,480), 
-    #                 isColor=True
-    #             )
-    # # initialize GStreamer Sender pipeline for RealSense depth, using port 5003
-    # out_send_depth = cv2.VideoWriter(
-    #                 "appsrc ! "
-    #                 "videoconvert ! "
-    #                 "video/x-raw, format=(string)BGRx, width=(int)640, height=(int)480, framerate=(fraction)30/1 ! "
-    #                 "videoconvert ! "
-    #                 "video/x-raw, format=(string)I420 ! "
-    #                 "omxh264enc control-rate=2 bitrate=4000000 ! "
-    #                 "video/x-h264, stream-format=byte-stream ! "
-    #                 "rtph264pay mtu=1400 ! "
-    #                 "udpsink host=%s port=5003 sync=false async=false"
-    #                 % (
-    #                     CLIENT_IP
-    #                 ),
-    #                 apiPreference=cv2.CAP_GSTREAMER,
-    #                 fourcc=0,
-    #                 fps=30,
-    #                 frameSize=(640,480), 
-    #                 isColor=True
-    #             )
-    # End of Legacy Code Section
-
+    # align depth2color
+    align = rs.align(rs.stream.color)
     # colorizer to color depth image
     colorizer = rs.colorizer()
     colorizer.set_option(rs.option.color_scheme, 2);  # white to black
     # actual streaming data
     while True:
-        frames = pipe.wait_for_frames()
-        # color frame
-        color_frame = frames.get_color_frame()
-        color_image = np.asanyarray(color_frame.get_data())
-        # out_send_color.write(color_image)
-
-        # depth frame
-        depth_frame = frames.get_depth_frame()
-        colorized_depth = np.asanyarray(colorizer.colorize(depth_frame).get_data())
-        # out_send_depth.write(colorized_depth)
-
+        # wait for a coherent pair of frames: depth and color
+        frames = pipeline.wait_for_frames()
+        # align the depth frame to color frame
+        aligned_frames = align.process(frames)
+        # get aligned frames
+        aligned_depth_frame = aligned_frames.get_depth_frame() 
+        aligned_color_frame = aligned_frames.get_color_frame()
+        if not aligned_depth_frame or not aligned_color_frame:
+            continue
+        # colorize depth image and get color image
+        colorized_depth = np.asanyarray(colorizer.colorize(aligned_depth_frame).get_data())
+        color_image = np.asanyarray(aligned_color_frame.get_data())
+        # stack both color and colorized depth horizontally
         images = np.hstack((color_image, colorized_depth))
+        # send using GStreamer
         out_send_both.write(images)
+
         # print(f'\rcolor shape: {color_image.shape}, colorized_depth shape: {colorized_depth.shape}, images shape: {images.shape}', end='')
 
         ##### Optional: displaying what is beint sent
