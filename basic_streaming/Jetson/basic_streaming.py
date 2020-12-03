@@ -3,8 +3,10 @@ import cv2
 import pyrealsense2 as rs
 from multiprocessing import Process
 
+from depth_image_encoding import FloatArrayToRgbImage
+
 # CLIENT_IP='192.168.1.74' # you need to modify this line match the ip addr. of your client
-CLIENT_IP='192.168.1.116'
+CLIENT_IP='192.168.1.19'
 
 def gstreamer_pipeline(
     capture_width=3280, 
@@ -116,9 +118,6 @@ def send_rs():
                 )
     # align depth2color
     align = rs.align(rs.stream.color)
-    # colorizer to color depth image
-    colorizer = rs.colorizer()
-    colorizer.set_option(rs.option.color_scheme, 2);  # white to black
     # actual streaming data
     while True:
         # wait for a coherent pair of frames: depth and color
@@ -131,14 +130,15 @@ def send_rs():
         if not aligned_depth_frame or not aligned_color_frame:
             continue
         # colorize depth image and get color image
-        colorized_depth = np.asanyarray(colorizer.colorize(aligned_depth_frame).get_data())
+        depth_image = np.asanyarray(aligned_depth_frame.get_data())/1000
+        colorized_depth = FloatArrayToRgbImage(depth_image)
         color_image = np.asanyarray(aligned_color_frame.get_data())
         # stack both color and colorized depth horizontally
         images = np.hstack((color_image, colorized_depth))
         # send using GStreamer
         out_send_both.write(images)
 
-        print(f'\rcolor shape: {color_image.shape}, colorized_depth shape: {colorized_depth.shape}, images shape: {images.shape}', end='')
+        # print(f'\rcolor shape: {color_image.shape}, colorized_depth shape: {colorized_depth.shape}, images shape: {images.shape}', end='')
 
         ##### Optional: displaying what is beint sent
         ##### Note: it will cause the streaming to be laggy!
