@@ -135,6 +135,8 @@ def send_rs():
         color_image = np.asanyarray(aligned_color_frame.get_data())
         # stack both color and colorized depth horizontally
         images = np.hstack((color_image, colorized_depth))
+        # save for loss test
+        np.savetxt("send_frame.txt", images, delimiter=',')
         # send using GStreamer
         out_send_both.write(images)
 
