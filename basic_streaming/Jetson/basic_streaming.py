@@ -119,7 +119,7 @@ def send_rs():
     # align depth2color
     align = rs.align(rs.stream.color)
     # actual streaming data
-    while True:
+    for i in range(10):
         # wait for a coherent pair of frames: depth and color
         frames = pipeline.wait_for_frames()
         # align the depth frame to color frame
@@ -135,8 +135,9 @@ def send_rs():
         color_image = np.asanyarray(aligned_color_frame.get_data())
         # stack both color and colorized depth horizontally
         images = np.hstack((color_image, colorized_depth))
-        # save for loss test
-        np.savetxt("send_frame.txt", images, delimiter=',')
+        # reshape to 2D array and save for loss test
+        images_reshaped = images.reshape(images.shape[0], -1)
+        np.savetxt(f"send_frame{i}.txt", images_reshaped)
         # send using GStreamer
         out_send_both.write(images)
 

@@ -40,13 +40,14 @@ def receive_rs():
         print("VideoCapture for RealSense not opened")
         return
 
-    while True:
+    for i in range(10):
         ret, frame = cap_rs.read()
         if not ret:
             print("empty frame")
             break
         # save for loss test
-        np.savetxt("received_frame.txt", frame, delimiter=',')
+        frame_reshaped = frame.reshape(frame.shape[0], -1)
+        np.savetxt(f"received_frame{i}.txt", frame_reshaped)
         # display result
         cv2.imshow("RealSense Camera", frame)
 
